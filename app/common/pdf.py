@@ -20,6 +20,9 @@ def fill_form(input_file,output_file,data):
             key=annotation[ANNOT_FIELD_KEY][1:-1]
             if key in data.keys():
                 val = data[key]
+                if val == None:
+                    # skip nulls
+                    continue
                 if val == True:
                     # treat booleans as checkboxes
                     annotation.update(
