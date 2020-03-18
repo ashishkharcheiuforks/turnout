@@ -5,6 +5,7 @@ from celery import shared_task
 
 from common.analytics import statsd
 from common.pdf import fill_form
+from election.models import StateInformation
 
 from .models import Registration
 
@@ -49,6 +50,21 @@ def process_registration_submission(registration_pk, state_id_number, is_18_or_o
     if registration.previous_suffix:
         suffix_field = registration.previous_suffix.replace(".", "").lower()
         registration_data[f"previous_suffix_{suffix_field}"] = True
+
+    # get mailto address from StateInformation
+    # later this will be more complicated...
+    try:
+        state_mailto_address = StateInformation.objects.get(
+            state=registration.state,
+            field_type__slug="registration_nvrf_submission_address",
+        ).text
+    except StateInformation.DoesNotExist:
+        state_mailto_address = ""
+    # split by linebreaks, because each line is a separate field in the PDF
+    for num, line in enumerate(state_mailto_address.splitlines()):
+        registration_data[f"mailto_line_{num+1}"] = line
+
+    print(registration_data)
 
     # fill from dict
     fill_form(template_pdf, filled_pdf, registration_data)
