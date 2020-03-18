@@ -28,11 +28,14 @@ def fill_form(input_file, output_file, data):
                     # treat booleans as checkboxes
                     annotation.update(pdfrw.PdfDict(V=pdfrw.PdfName("On")))
                 else:
+                    # set annotation value
                     annotation.update(pdfrw.PdfDict(V="{}".format(val)))
+                    # and empty appearance to make field visible in Apple Preview
+                    annotation.update(pdfrw.PdfDict(AP=""))
                 # mark the fields as un-editable
                 annotation.update(pdfrw.PdfDict(Ff=1))
 
-    # set NeedAppearances to ensure the fields are visible in some clientds
+    # set NeedAppearances to ensure the fields are visible in Adobe Reader
     the_pdf.Root.AcroForm.update(pdfrw.PdfDict(NeedAppearances=pdfrw.PdfObject("true")))
 
     pdfrw.PdfWriter().write(output_file, the_pdf)
