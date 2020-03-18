@@ -1,6 +1,6 @@
 import logging
 import shutil
-import tempfile
+import io
 
 from celery import shared_task
 
@@ -22,7 +22,7 @@ def process_registration_submission(registration_pk, state_id):
 
     # open file objects
     template_pdf = open(template_path, "rb")
-    filled_pdf = tempfile.NamedTemporaryFile(mode="wb")
+    filled_pdf = io.BytesIO()
 
     # convert Registration to dict
     registration_data = registration.__dict__
@@ -34,7 +34,8 @@ def process_registration_submission(registration_pk, state_id):
 
     # TODO upload to s3
     # TEMP copy to /app/ to be visible
-    shutil.copyfile(filled_pdf.name, "/app/register-tmp.pdf")
+    with open("/app/tmp/register-out.pdf", "wb") as tmp_out:
+        tmp_out.write(filled_pdf.getbuffer())
 
     # remove temporary file
     filled_pdf.close()
