@@ -1,3 +1,4 @@
+from django.urls import include, path
 from rest_framework import routers
 
 from election.api_views import StateFieldsViewSet, StateViewSet
@@ -9,3 +10,7 @@ router.register(r"states", StateViewSet)
 router.register(r"fields", StateFieldsViewSet)
 router.register(r"lookup", LookupViewSet)
 router.register(r"register", RegistrationViewSet)
+
+urlpatterns = router.urls + [
+    path("storage/", include("storage.api_urls")),
+]

@@ -78,6 +78,7 @@ THIRD_PARTY_APPS = [
     "django_celery_results",
     "phonenumber_field",
     "django_otp",
+    "s3_folder_storage",
 ]
 
 FIRST_PARTY_APPS = [
@@ -91,6 +92,7 @@ FIRST_PARTY_APPS = [
     "multifactor",
     "register",
     "mailer",
+    "storage",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + FIRST_PARTY_APPS
@@ -120,6 +122,8 @@ MIDDLEWARE = [
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 STATICFILES_DIRS = (os.path.join(BASE_PATH, "dist"),)
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_PATH, "static")
 
 #### END ASSET CONFIGURATION
 
@@ -216,14 +220,6 @@ MULTIFACTOR_ISSUER = env.str("MULTIFACTOR_ISSUER", default="Turnout")
 #### END MULTIFACTOR CONFIGURATION
 
 
-#### FILE CONFIGURATION
-
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_PATH, "static")
-
-#### END FILE CONFIGURATION
-
-
 #### DJANGO-ALIVE CONFIGURATION
 
 ALIVE_CHECKS = {
@@ -231,6 +227,50 @@ ALIVE_CHECKS = {
 }
 
 #### END ALIVE CONFIGURATION
+
+
+#### AWS CONFIGURATION
+
+AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", default="")
+AWS_DEFAULT_REGION = env.str("AWS_DEFAULT_REGION", default="us-west-2")
+
+#### END AWS CONFIGURATION
+
+
+#### STORAGE CONFIGURATION
+
+DEFAULT_FILE_STORAGE = "storage.backends.AttachmentStorage"
+FILE_EXPIRATION_HOURS = env.int("FILE_EXPIRATION_HOURS", default=24)
+FILE_TIMEZONE = env.str("FILE_TIMEZONE", default="America/Los_Angeles")
+
+if env.bool("ATTACHMENT_USE_S3", False):
+    ATTACHMENT_STORAGE_ENGINE = "s3_folder_storage.s3.DefaultStorage"
+
+    AWS_DEFAULT_REGION = env.str("AWS_DEFAULT_REGION", "us-west-2")
+    AWS_STORAGE_BUCKET_NAME = env.str("AWS_STORAGE_BUCKET_NAME")
+    AWS_STORAGE_PRIVATE_BUCKET_NAME = env.str("AWS_STORAGE_PRIVATE_BUCKET_NAME")
+
+    AWS_STORAGE_PRIVATE_URL_EXPIRATION = env.int(
+        "AWS_STORAGE_PRIVATE_URL_EXPIRATION", 15
+    )
+
+    ATTACHMENT_DEFAULT_S3_PATH = env.str("DEFAULT_S3_PATH", "{ENV}")
+    AWS_DEFAULT_ACL = "public-read"
+
+    AWS_S3_CUSTOM_DOMAIN = env.str(
+        "AWS_S3_CUSTOM_DOMAIN",
+        default=f"{AWS_STORAGE_BUCKET_NAME}.{AWS_DEFAULT_REGION}.amazonaws.com",
+    )
+    MEDIA_ROOT = f"/{DEFAULT_S3_PATH}/"
+    MEDIA_URL = f"//{AWS_S3_CUSTOM_DOMAIN}/{DEFAULT_S3_PATH}/"
+else:
+    ATTACHMENT_STORAGE_ENGINE = "django.core.files.storage.FileSystemStorage"
+    MEDIA_ROOT = os.path.join(BASE_PATH, "uploads")
+    MEDIA_URL = "/uploads/"
+
+#### END STORAGE CONFIGURATION
+
 
 #### CORS CONFIGURATION
 

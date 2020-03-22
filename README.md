@@ -50,7 +50,7 @@ To run python tests, run `make testpy` (while server is running)
 To clean python files run `make lint` (while the server is running)
 
 To bootstrap the database with state information fields and data from our production API,
-run `make importfromprod` (while server is running) 
+run `make importfromprod` (while server is running)
 
 
 ### Shell Access
@@ -128,3 +128,29 @@ IAM user with permission to perform IAM auth to your turnout database. If you're
 commands on EC2, ensure that the IAM Role that your instance is running under has proper
 permissions. If your RDS instance is on a private subnet, you'll likely need to connect via a VPN
 or from a shell that is on that same subnet.
+
+
+### Storage Configuration
+
+Turnout relies on Amazon S3 for storage of attachments files. Configuring this requires some
+environment configuration. For local development these can be added to `.env` in your project root
+and if running on a system such as fargate using the normal environment setting-functionality.
+
+If you run turnout on EC2 or Fargate, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` may be held
+out and you can control S3 permissions using the IAM role assigned to the EC2 instance or Fargate
+task.
+
+* `AWS_ACCESS_KEY_ID` (boolean, required if using S3, may be provided automatically if running on
+    AWS) -- Should have proper ACL rules to access both public and private S3 buckets used
+* `AWS_SECRET_ACCESS_KEY` (boolean, required if using S3, may be provided automatically if running
+    on AWS) -- Should have proper ACL rules to access both public and private S3 buckets used
+* `ATTACHMENT_USE_S3` (boolean, optional) - `True` if you wish to use S3 as a storage backend
+* `AWS_DEFAULT_REGION` (string, optional, default `us-west-2`)
+* `AWS_STORAGE_BUCKET_NAME` (string, required if using S3) -- Bucket you wish to use for general
+    attachments
+* `AWS_STORAGE_PRIVATE_BUCKET_NAME` (string, required if using S3) -- Bucket you wish to use for
+    secure documents such as filled out voter registration forms
+* `ATTACHMENT_DEFAULT_S3_PATH` (string, optional) -- Path in S3 bucket files should be added under.
+    This lets one bucket be shared by multiple environments.
+* `AWS_S3_CUSTOM_DOMAIN` (string, optional) -- If your S3 bucket is proxied by a system such as
+    cloudfront or cloudflare, the hostname should be entered here.
