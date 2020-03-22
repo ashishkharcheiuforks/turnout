@@ -247,7 +247,6 @@ FILE_TIMEZONE = env.str("FILE_TIMEZONE", default="America/Los_Angeles")
 if env.bool("ATTACHMENT_USE_S3", False):
     ATTACHMENT_STORAGE_ENGINE = "s3_folder_storage.s3.DefaultStorage"
 
-    AWS_DEFAULT_REGION = env.str("AWS_DEFAULT_REGION", "us-west-2")
     AWS_STORAGE_BUCKET_NAME = env.str("AWS_STORAGE_BUCKET_NAME")
     AWS_STORAGE_PRIVATE_BUCKET_NAME = env.str("AWS_STORAGE_PRIVATE_BUCKET_NAME")
 
@@ -255,12 +254,14 @@ if env.bool("ATTACHMENT_USE_S3", False):
         "AWS_STORAGE_PRIVATE_URL_EXPIRATION", 15
     )
 
-    ATTACHMENT_DEFAULT_S3_PATH = env.str("DEFAULT_S3_PATH", "{ENV}")
+    DEFAULT_S3_PATH = env.str("ATTACHMENT_DEFAULT_S3_PATH", "{ENV}")
     AWS_DEFAULT_ACL = "public-read"
+    AWS_QUERYSTRING_AUTH = False
 
+    AWS_S3_REGION_NAME = env.str("AWS_S3_REGION_NAME", default=AWS_DEFAULT_REGION)
     AWS_S3_CUSTOM_DOMAIN = env.str(
         "AWS_S3_CUSTOM_DOMAIN",
-        default=f"{AWS_STORAGE_BUCKET_NAME}.{AWS_DEFAULT_REGION}.amazonaws.com",
+        default=f"{AWS_STORAGE_BUCKET_NAME}.s3-{AWS_DEFAULT_REGION}.amazonaws.com",
     )
     MEDIA_ROOT = f"/{DEFAULT_S3_PATH}/"
     MEDIA_URL = f"//{AWS_S3_CUSTOM_DOMAIN}/{DEFAULT_S3_PATH}/"

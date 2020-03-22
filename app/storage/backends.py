@@ -16,7 +16,7 @@ def uniqify_filename(existing_filename):
     return f"{unique_code}.{existing_filename}"
 
 
-private_bucket_name = getattr(settings, "AWS_PRIVATE_STORAGE_BUCKET_NAME", "")
+private_bucket_name = getattr(settings, "AWS_STORAGE_PRIVATE_BUCKET_NAME", "")
 querystring_expire = getattr(settings, "AWS_STORAGE_PRIVATE_URL_EXPIRATION", 60)
 
 
