@@ -1,10 +1,11 @@
 # Swiped from EveryVoter, which was swiped from Connect
+import secrets
+import string
 
 from django.conf import settings
 from django.core.files.storage import get_storage_class
 from django.utils.timezone import now
 from pytz import timezone
-from smalluuid.smalluuid import SmallUUID
 
 AttachmentStorageEngine = get_storage_class(
     import_path=settings.ATTACHMENT_STORAGE_ENGINE
@@ -12,7 +13,9 @@ AttachmentStorageEngine = get_storage_class(
 
 
 def uniqify_filename(existing_filename):
-    unique_code = str(SmallUUID())[:5]
+    alphabet = string.ascii_letters + string.digits
+    string_length = secrets.choice(range(5, 12))
+    unique_code = "".join(secrets.choice(alphabet) for _ in range(string_length))
     return f"{unique_code}.{existing_filename}"
 
 
