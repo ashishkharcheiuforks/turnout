@@ -1,16 +1,9 @@
 from django.urls import include, path
-from rest_framework import routers
 
-from election.api_views import StateFieldsViewSet, StateViewSet
-from register.api_views import RegistrationViewSet
-from verifier.api_views import LookupViewSet
-
-router = routers.SimpleRouter()
-router.register(r"states", StateViewSet)
-router.register(r"fields", StateFieldsViewSet)
-router.register(r"lookup", LookupViewSet)
-router.register(r"register", RegistrationViewSet)
-
-urlpatterns = router.urls + [
+app_name = "api"
+urlpatterns = [
+    path("registration/", include("register.api_urls")),
+    path("verification/", include("verifier.api_urls")),
+    path("election/", include("election.api_urls")),
     path("storage/", include("storage.api_urls")),
 ]
