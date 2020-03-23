@@ -4,7 +4,7 @@ import logging
 from celery import shared_task
 
 from common.analytics import statsd
-from common.pdf import fill_form
+from common.pdf import fill_form, join_files
 from election.models import StateInformation
 
 from .models import Registration
@@ -19,9 +19,12 @@ def process_registration_submission(registration_pk, state_id_number, is_18_or_o
 
     # TODO, select template based on state
     template_path = "register/templates/pdf/eac-nvra.pdf"
+    cover_path = "register/templates/pdf/cover.pdf"
 
     # open file objects
     template_pdf = open(template_path, "rb")
+    cover_pdf = open(cover_path, "rb")
+    joined_pdf = io.BytesIO()
     filled_pdf = io.BytesIO()
 
     # convert Registration to dict
@@ -64,8 +67,30 @@ def process_registration_submission(registration_pk, state_id_number, is_18_or_o
     for num, line in enumerate(state_mailto_address.splitlines()):
         form_data[f"mailto_line_{num+1}"] = line
 
+    # get mailing deadline from StateInformation
+    try:
+        state_mail_deadline = StateInformation.objects.get(
+            state=registration.state, field_type__slug="registration_deadline_mail",
+        ).text.lower()
+        if state_mail_deadline.split()[0] in ["postmarked", "received"]:
+            state_deadline = f"Your form must be {state_mail_deadline}."
+        else:
+            state_deadline = f"Your form must arrive by {state_mail_deadline}."
+    except StateInformation.DoesNotExist:
+        state_deadline = "Mail your form as soon as possible."
+    form_data["state_deadlines"] = state_deadline
+
+    # join cover pages
+    join_files([cover_pdf, template_pdf], joined_pdf)
+
+    with open("/app/tmp/register-joined.pdf", "wb") as tmp_out:
+        tmp_out.write(joined_pdf.getbuffer())
+
+    # reset buffer on joined_pdf
+    joined_pdf.seek(0)
+
     # fill from dict
-    fill_form(template_pdf, filled_pdf, form_data)
+    fill_form(joined_pdf, filled_pdf, form_data)
 
     # TODO upload to s3
     # TEMP copy to /app/ to be visible
