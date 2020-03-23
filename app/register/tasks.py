@@ -15,7 +15,7 @@ logger = logging.getLogger("register")
 @shared_task
 @statsd.timed("turnout.register.process_registration_submission")
 def process_registration_submission(registration_pk, state_id_number, is_18_or_over):
-    registration = Registration.objects.get(pk=registration_pk)
+    registration = Registration.objects.select_related().get(pk=registration_pk)
 
     # TODO, select template based on state
     template_path = "register/templates/pdf/eac-nvra.pdf"
@@ -57,7 +57,7 @@ def process_registration_submission(registration_pk, state_id_number, is_18_or_o
     # get mailto address from StateInformation
     # later this will be more complicated...
     try:
-        state_mailto_address = StateInformation.objects.get(
+        state_mailto_address = StateInformation.objects.only("field_type", "text").get(
             state=registration.state,
             field_type__slug="registration_nvrf_submission_address",
         ).text
@@ -69,7 +69,7 @@ def process_registration_submission(registration_pk, state_id_number, is_18_or_o
 
     # get mailing deadline from StateInformation
     try:
-        state_mail_deadline = StateInformation.objects.get(
+        state_mail_deadline = StateInformation.objects.only("field_type", "text").get(
             state=registration.state, field_type__slug="registration_deadline_mail",
         ).text.lower()
         if state_mail_deadline.split()[0] in ["postmarked", "received"]:
